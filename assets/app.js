@@ -257,6 +257,24 @@ function createResults(P1Name,P1Wins,P1Draws,P1Losses,P2Name,P2Wins,P2Draws,P2Lo
 }
 
 
+//8. Funcion para mostrar pantalla de too many players cuando ya se tenga a mas de dos usuarios con sesion iniciada
+function showTooManyScreen(){
+      if(!$("#welcomeScreenContainer").hasClass("d-none")){
+            $("#welcomeScreenContainer").addClass("d-none");
+      }
+      if(!$("#waitingScreenContainer").hasClass("d-none")){
+            $("#waitingScreenContainer").addClass("d-none");
+      }
+      if(!$("#playingScreenContainer").hasClass("d-none")){
+            $("#playingScreenContainer").addClass("d-none");
+      }
+      if($("#tooManyContainer").hasClass("d-none")){
+            $("#playingScreenContainer").removeClass("d-none");
+      }
+      $("#tooManyUsers").modal("show");
+}
+
+
 //---------------------------------------------------------------------------------------------------------------------
 //                                         DECLARACION DE VARIABLES
 //---------------------------------------------------------------------------------------------------------------------
@@ -302,32 +320,28 @@ database.ref("/results/startClicksCounter").on("value", function(snapshot){
 
 //1. Evento que detecta cambios en las conexiones
 database.ref().on("value", function(snapshot) {
+      console.log("Evento 1")
       qtyOfUsersVar = qtyOfUsers - snapshot.child("connections").numChildren();
       qtyOfUsers = snapshot.child("connections").numChildren();
       if(userIDState===false){
             userID = qtyOfUsers;
             userIDState = true;
       }
-      if(qtyOfUsersVar>0 && (qtyOfUsers<startClicksCounter)){
-            startClicksCounter = qtyOfUsers;
-            database.ref("/results/startClicksCounter").set(startClicksCounter);
-            if(startClicksCounter===qtyOfUsers && startClicksCounter===1){
-                  console.log("Dentro1: " + qtyOfUsers)
-                  showWaitScreen();
-            }
-            else{
-                  console.log("dentro2: startClicksCounter=" + startClicksCounter + ", qtyOfUsers=" + qtyOfUsers)
+            if(qtyOfUsersVar>0){
                   showWelcScreen();
                   localStartClick = false;
                   database.ref("/results/startClicksCounter").set(0);
+                  database.ref("/results").remove();
+                  database.ref("/chat").remove();
+                  database.ref("/game").remove();
             }
-      }
 });
 
 
 
 //2.0 Evento para detectar el click en Start, actualizar el startClicksCounter en firebase y actualizar el nombre del usuario en firebase
 $("#startButton").on("click", function(){
+      console.log("Evento 2.0")
       if($("#userNameInput").val()!="" && (startClicksCounter === 0 || startClicksCounter === null)){
             console.log("dentro de startClick event pre asignacion a BD, startClicksCounter: " + startClicksCounter);
             database.ref("/results/name" + (startClicksCounter+1)).set({name : $("#userNameInput").val()})
@@ -345,7 +359,7 @@ $("#startButton").on("click", function(){
             $("#noNameModal").modal("show");
       }
       else if(startClicksCounter >= 2){
-            $("#tooManyUsers").modal("show");
+            showTooManyScreen();
       }
 });
 
@@ -353,6 +367,7 @@ $("#startButton").on("click", function(){
 
 //3. Evento para detectar click en cualquiera de las 3 opciones de juego de los dos usuarios y actualizar la seleccion hacia la BD
 $(".optionButtonP").on("click", function(){
+      console.log("Evento 3")
       if(playerPlayed===false){
             playerPlayed=true;
             playerPick = $(this).attr("data-choice");
@@ -372,6 +387,7 @@ $(".optionButtonP").on("click", function(){
 
 //4. Evento para detectar cuando los dos usuarios ya jugaron, actualizar BD, revisar quien gano/empato/perdio
 database.ref().on("value", function(snapshot){
+      console.log("Evento 4")
 
       var scrsht = snapshot.val();
       if(snapshot.hasChild("game")){
@@ -437,6 +453,7 @@ database.ref().on("value", function(snapshot){
 
 //5. Evento para detectar cuando hay escritura de resultados hacia la BD y crear la tabla de resultados con la funcion createResults
 database.ref("/results").on("value", function(snapshot){
+      console.log("Evento 5")
             createResults(
                   snapshot.child("/name1/name").val(),
                   snapshot.child("/player1/numOfWins").val(),
@@ -451,11 +468,13 @@ database.ref("/results").on("value", function(snapshot){
 
 //6. Evento para detectar cuando dan click en el boton de playAgain, registrar la bandera true en restartGame en la BD para que con otro evento reiniciemos juego en las dos sesiones
 $("#playAgainButton").on("click", function(){
+      console.log("Evento 6")
       database.ref("/restartGame").set(true);
 })
 
 //7. Evento para detectar cuando hay cambios en el nodo de restartGame, en caso de que restartGame es = true entonces reinicia el juego con la funcion newGame
 database.ref("/restartGame").on("value", function(snapshot){
+      console.log("Evento 7")
       if(snapshot.val()===true){
             newGame();
       }
@@ -463,6 +482,7 @@ database.ref("/restartGame").on("value", function(snapshot){
 
 //8. Evento para detectar desde la base de datos si los dos usuarios ya dieron click y mandar a pantalla de juego o a pantalla de espera
 database.ref().on("value", function(snapshot){
+      console.log("Evento 8")
       if(snapshot.child("connections").numChildren()<=2){
             if(userID === 1 && snapshot.child("/results/startClicks/startClick1/clickedStart").val() === true && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === false){
                   showWaitScreen();
@@ -475,7 +495,7 @@ database.ref().on("value", function(snapshot){
             }
       }
       else if(snapshot.child("connections").numChildren()>2 && userID > 2){
-            $("#tooManyUsers").modal("show");
+            showTooManyScreen();
       }
 })
 
@@ -495,13 +515,13 @@ $("#chatSubmitButton").on("click", function(){
 
 //10. Evento para cachar cambios en todo la base de datos para loggear los ultimos 3 mensajes que se han enviado al chat
 database.ref().on("value", function(snapshot){
-      var qtyOfMessages = snapshot.child("chat").child("messageCounter").val()
+      var messageCounter = snapshot.child("chat").child("messageCounter").val()
       var snpsht = snapshot.val();
 
       $("#chatBoxCol").empty()
       
-      var msg1 = snapshot.child("chat").child("message" + (qtyOfMessages)).child("message").val();
-      var msg1User = snapshot.child("chat").child("message" + (qtyOfMessages)).child("userID").val();
+      var msg1 = snapshot.child("chat").child("message" + (messageCounter)).child("message").val();
+      var msg1User = snapshot.child("chat").child("message" + (messageCounter)).child("userID").val();
       var msg1UserName = snapshot.child("results").child("name" + msg1User).child("name").val()
       if(msg1 && msg1User && msg1UserName){
             var msg1Element = $("<p>")
@@ -510,8 +530,8 @@ database.ref().on("value", function(snapshot){
       }
       
 
-      var msg2 = snapshot.child("chat").child("message" + (qtyOfMessages-1)).child("message").val();
-      var msg2User = snapshot.child("chat").child("message" + (qtyOfMessages-1)).child("userID").val();
+      var msg2 = snapshot.child("chat").child("message" + (messageCounter-1)).child("message").val();
+      var msg2User = snapshot.child("chat").child("message" + (messageCounter-1)).child("userID").val();
       var msg2UserName = snapshot.child("results").child("name" + msg2User).child("name").val()
       if(msg2 && msg2User && msg2UserName){
             var msg2Element = $("<p>")
@@ -519,8 +539,8 @@ database.ref().on("value", function(snapshot){
             msg2Element.prependTo($("#chatBoxCol"))
       }
 
-      var msg3 = snapshot.child("chat").child("message" + (qtyOfMessages-2)).child("message").val();
-      var msg3User = snapshot.child("chat").child("message" + (qtyOfMessages-2)).child("userID").val();
+      var msg3 = snapshot.child("chat").child("message" + (messageCounter-2)).child("message").val();
+      var msg3User = snapshot.child("chat").child("message" + (messageCounter-2)).child("userID").val();
       var msg3UserName = snapshot.child("results").child("name" + msg3User).child("name").val()
       if(msg3 && msg3User && msg3UserName){
             var msg3Element = $("<p>")
