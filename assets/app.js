@@ -453,7 +453,8 @@ database.ref("/restartGame").on("value", function(snapshot){
 
 //8. Evento para detectar desde la base de datos si los dos usuarios ya dieron click y mandar a pantalla de juego o a pantalla de espera
 database.ref().on("value", function(snapshot){
-      if(snapshot.child("connections").numChildren===2){
+      console.log("Num de conexiones: " + snapshot.child("connections").numChildren)
+      if(snapshot.child("connections").numChildren()<=2){
             if(userID === 1 && snapshot.child("/results/startClicks/startClick1/clickedStart").val() === true && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === false){
                   showWaitScreen();
             }
@@ -463,5 +464,8 @@ database.ref().on("value", function(snapshot){
             else if(snapshot.child("/results/startClicks/startClick1/clickedStart").val() === true && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === true){
                   showPlayScreen();
             }
+      }
+      else if(snapshot.child("connections").numChildren()>2 && userID > 2){
+            $("#tooManyUsers").modal("show");
       }
 })
