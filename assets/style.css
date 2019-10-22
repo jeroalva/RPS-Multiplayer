@@ -1,0 +1,24 @@
+html body{
+    background-color: #0275d8;
+}
+
+#icon-span{
+    font-size: 35px;
+}
+
+
+#playingDetailsRow button{
+    font-size: 20px;
+}
+
+.colorAreasJuego{
+    background-color:  rgb(181, 180, 184);
+}
+
+#userNameInput{
+    text-align: center;
+}
+
+table{
+    background-color: rgb(181, 180, 184);
+}

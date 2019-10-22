@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Rock Paper Scissors</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/d6866b9601.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/6.0.4/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/6.0.4/firebase-database.js"></script>
+  </head>
+<body>
+    <div class="container" id="welcomeScreenContainer">
+        <div class="row" id="welcomeScreenRow">
+            <div class="col" id="welcomeScreenCol">
+                <div class="row" id="welcomeHeaderRow">
+                    <div class="col pt-5 text-center" id="welcomeHeaderCol">
+                        <span id="icon-span">
+                            <i class="far fa-hand-rock fa-3x" id="icon"></i>
+                            <i class="fas fa-scroll fa-3x" id="icon"></i>
+                            <i class="fas fa-cut fa-3x" id="icon"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="row mt-2" id="welcomeTitleRow">
+                    <div class="col text-center" id="welcomeTitleCol">
+                        <div class="row" id="welcomeTitleRow1">
+                            <div class="col" id="welcomeTitleRow1Col">
+                                <h1>Rock Paper Scissors</h1>
+                                <h4>Mutliplayer</h4>
+                            </div>
+                        </div>
+                        <div class="row mt-5" id="welcomeTitleInputRow">
+                            <div class="col-4"></div>
+                            <div class="col-4 text-center" id="welcomeTitleInputCol">
+                                <form>
+                                    <div class="form-group" id="inputNameForm">
+                                        <label for="userNameInput">Name</label>
+                                        <input type="string" class="form-control" id="userNameInput" aria-describedby="userNameHelp" placeholder="Enter your name">
+                                        <small id="userNameHelp" class="form-text text-muted">This is the name that will be shown when you send messages on the chat window!</small>
+                                    </div>
+                                </form>                
+                            </div>
+                            <div class="col-4"></div>
+                        </div>
+                        <div class="row" id="welcomeTitleButtonRow">
+                            <div class="col" id="welcomeTitleButtonCol">
+                                <button type="button" class="btn btn-secondary" id="startButton">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-5 text-center" id="welcomeDetails">
+                    <div class="col-3"></div>
+                    <div class="col-6">
+                        <p>This is a typical rock, paper, scissors game. You will get to play against an oponent. To play against a friend copy and share the URL for this website!</p>
+                    </div>
+                    <div class="col-30"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container d-none" id="waitingScreenContainer">
+        <div class="row" id="waitingScreenRow">
+            <div class="col" id="waitingScreenCol">
+                <div class="row" id="waitingHeaderRow">
+                    <div class="col pt-5 text-center" id="welcomeHeaderCol">
+                        <span id="icon-span">
+                            <i class="far fa-hand-rock fa-3x" id="icon"></i>
+                            <i class="fas fa-scroll fa-3x" id="icon"></i>
+                            <i class="fas fa-cut fa-3x" id="icon"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="row mt-2" id="waitingTitleRow">
+                    <div class="col text-center" id="waitingTitleCol">
+                        <h1>Rock Paper Scissors</h1>
+                    </div>
+                </div>
+                <div class="row" id="gifDetails">
+                    <div class="col text-center" id="gifElement">
+                    </div>
+                </div>
+                <div class="row mt-5 text-center" id="waitingDetails">
+                    <div class="col">
+                        <p>We are waiting for another oponent in the meanwhile please practice with your hands!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container d-none" id="playingScreenContainer">
+        <div class="row" id="playingScreenRow">
+            <div class="col" id="playingScreenCol">
+                <div class="row" id="playingHeaderRow">
+                    <div class="col pt-5 text-center" id="playingHeaderCol">
+                        <span id="icon-span">
+                            <i class="far fa-hand-rock fa-3x" id="icon"></i>
+                            <i class="fas fa-scroll fa-3x" id="icon"></i>
+                            <i class="fas fa-cut fa-3x" id="icon"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="row mt-5 text-center" id="playingDetailsRow">
+                    <div class="col-12" id="player1Col">
+                        <div class="row" id="player1GameRow">
+                            <div class="col colorAreasJuego rounded mr-2" id="player1GameOptionsCol">
+                                <div class="row" id="player1OptionsTextRow">
+                                    <div class="col" id="player1OptionsTextCol">
+                                        <h5 class="mt-2">Choose an option!</h5>
+                                    </div>
+                                </div>
+                                <div class="row text-center" id="player1Option1Row">
+                                    <div class="col" id="player1Option1Col">
+                                        <button class="btn-lg btn-secondary btn m-1"><i class="far fa-hand-rock fa-2x ml-1 mr-1 optionButtonP" id="player1Option1Bttn" data-choice="rock"></i></button>
+                                    </div>
+                                </div>
+                                <div class="row text-center" id="player1Option2Row">
+                                    <div class="col" id="player1Option2Col">
+                                        <button class="btn-lg btn-secondary btn m-1"><i class="fas fa-scroll fa-2x optionButtonP" id="player1Option2Bttn" data-choice="paper"></i></button>
+                                    </div>
+                                </div>
+                                <div class="row text-center" id="player1Option3Row">
+                                    <div class="col" id="player1Option2Col">
+                                        <button class="btn-lg btn-secondary btn mt-1 mb-3"><i class="fas fa-cut fa-2x ml-1 mr-1 optionButtonP" id="player1Option3Bttn" data-choice="scissors"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col colorAreasJuego rounded mr-2" id="player1GameChoiceCol">
+                                <div class="row" id="player1GameChoiceTitleRow">
+                                    <div class="col" id="player1GameChoiceTitleCol">
+                                        <h5 class="mt-2 mb-6">Your choice</h5>
+                                    </div>
+                                </div>
+                                <div class="row" id="player1GameIconRow">
+                                    <div class="col iconCol" id="player1GameChoiceIconCol">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col colorAreasJuego rounded" id="player1GameEnemyCol">
+                                <div class="row" id="player1GameEnemyTitleRow">
+                                    <div class="col" id="player1GameEnemyTitleCol">
+                                        <h5 class="mt-2">His choice</h5>
+                                    </div>
+                                </div>
+                                <div class="row" id="player1GameEnemySpinnerRow">
+                                    <div class="col" id="player1GameEnemySpinnerCol">
+                                        <div class="spinner-border"></div>
+                                    </div>
+                                </div>
+                                <div class="row" id="player1GameEnemyIconRow">
+                                    <div class="col" id="player1GameEnemyIconCol">
+                                    </div>
+                                </div>
+                            </div>    
+                        </div>
+                        <div class="row" id="player1ResultRow">
+                            <div class="col" id="player1ResultCol">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" id="player2Col">
+                        <div class="row" id="player2GameRow">
+                            <div class="col colorAreasJuego rounded mr-2" id="player2GameOptionsCol">
+                                <div class="row" id="player2OptionsTextRow">
+                                    <div class="col" id="player2OptionsTextCol">
+                                        <h5 class="mt-2">Choose an option!</h5>
+                                    </div>
+                                </div>
+                                <div class="row text-center" id="player2Option1Row">
+                                    <div class="col" id="player2Option1Col">
+                                        <button class="btn-lg btn-secondary btn m-1"><i class="far fa-hand-rock fa-2x ml-1 mr-1 optionButtonP" id="player2Option1Bttn" data-choice="rock"></i></button>
+                                    </div>
+                                </div>
+                                <div class="row text-center" id="player2Option2Row">
+                                    <div class="col" id="player2Option2Col">
+                                        <button class="btn-lg btn-secondary btn m-1"><i class="fas fa-scroll fa-2x optionButtonP" id="player2Option2Bttn" data-choice="paper"></i></button>
+                                    </div>
+                                </div>
+                                <div class="row text-center" id="player2Option3Row">
+                                    <div class="col" id="player2Option2Col">
+                                        <button class="btn-lg btn-secondary btn mt-1 mb-3"><i class="fas fa-cut fa-2x ml-1 mr-1 optionButtonP" id="player2Option3Bttn" data-choice="scissors"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col colorAreasJuego rounded mr-2" id="player2GameChoiceCol">
+                                <div class="row" id="player2GameChoiceTitleRow">
+                                    <div class="col" id="player2GameChoiceTitleCol">
+                                        <h5 class="mt-2 mb-6">Your choice</h5>
+                                    </div>
+                                </div>
+                                <div class="row" id="player2GameChoiceIconRow">
+                                    <div class="col iconCol" id="player2GameChoiceIconCol">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col colorAreasJuego rounded mr-2" id="player2GameEnemyCol">
+                                <div class="row" id="player2GameEnemyTitleRow">
+                                    <div class="col" id="player2GameEnemyTitleCol">
+                                        <h5 class="mt-2 mb-6">His choice</h5>
+                                    </div>
+                                </div>
+                                <div class="row" id="player2GameEnemySpinnerRow">
+                                    <div class="col" id="player2GameEnemySpinnerCol">
+                                        <div class="spinner-border"></div>
+                                    </div>
+                                </div>    
+                                <div class="row" id="player2GameEnemyIconRow">
+                                    <div class="col" id="player2GameEnemyIconCol">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="player2ResultRow">
+                            <div class="col" id="player2ResultCol">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4 mb-4 d-none" id="playAgainBttnRow">
+                    <div class="col text-center" id="playAgainBttnCol">
+                        <button type="button" class="btn btn-warning" id="playAgainButton">Play again</button>
+                    </div>
+                </div>
+                <div class="row mt-1" id="overAllScoreRow">
+                    <div class="col colAreasJuego rounded" id="overAllScoreCol">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" tabindex="-1" role="dialog" id="noNameModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Falta tu nombre!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¡Para continuar es nececario que llenes tu nombre!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>    
+        <script type="text/javascript" src="assets/app.js"></script>;
+</body>
+</html>
