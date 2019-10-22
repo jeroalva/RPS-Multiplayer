@@ -22,3 +22,8 @@ html body{
 table{
     background-color: rgb(181, 180, 184);
 }
+
+#chatBoxCol{
+    height: 120px;
+    background-color: white;
+}

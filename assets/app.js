@@ -33,6 +33,7 @@ var firebaseConfig = {
     database.ref("/results/player2").remove();
     database.ref("/game").remove();
     database.ref("/restartGame").set(false);
+    database.ref("/chat").remove();
 
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -266,6 +267,7 @@ var wins = 0;
 var draws = 0;
 var looses = 0;
 var gameEnd = false;
+var messageCounter = 0;
 
 //---------------------------------------------------------------------------------------------------------------------
 //                                         EVENTOS
@@ -329,7 +331,6 @@ connectionsRef.on("value", function(snapshot) {
 
 //2. Evento para detectar el click en Start y dependiendo de si hay dos usuarios mandar a Waiting Screen o bien ya mandar a la pantalla de juego con el Player 1 o el Player 2 abierto dependiendo de que usuario es el que esta viendo el DOM
 $("#startButton").on("click", function(){
-      console.log
       if($("#userNameInput").val()!=""){
             clickedStart = true;
             database.ref("/results/name" + userID).set({name : $("#userNameInput").val()})
@@ -453,7 +454,6 @@ database.ref("/restartGame").on("value", function(snapshot){
 
 //8. Evento para detectar desde la base de datos si los dos usuarios ya dieron click y mandar a pantalla de juego o a pantalla de espera
 database.ref().on("value", function(snapshot){
-      console.log("Num de conexiones: " + snapshot.child("connections").numChildren)
       if(snapshot.child("connections").numChildren()<=2){
             if(userID === 1 && snapshot.child("/results/startClicks/startClick1/clickedStart").val() === true && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === false){
                   showWaitScreen();
@@ -467,5 +467,55 @@ database.ref().on("value", function(snapshot){
       }
       else if(snapshot.child("connections").numChildren()>2 && userID > 2){
             $("#tooManyUsers").modal("show");
+      }
+})
+
+//9. Evento para cachar el texto del mensaje cuando alguien le da submit al chat y enviarlo a la base de datos
+$("#chatSubmitButton").on("click", function(){
+      event.preventDefault();
+      if($("#chatInputText").val()!=""){
+            messageCounter++
+            database.ref("/chat/message" + messageCounter).set({
+                  userID: userID,
+                  message: $("#chatInputText").val()
+            })
+            database.ref("/chat/messageCounter").set(messageCounter);
+            $("#chatInputText").text("");
+      }
+})
+
+//10. Evento para cachar cambios en todo la base de datos para loggear los ultimos 3 mensajes que se han enviado al chat
+database.ref().on("value", function(snapshot){
+      var qtyOfMessages = snapshot.child("chat").child("messageCounter").val()
+      var snpsht = snapshot.val();
+
+      $("#chatBoxCol").empty()
+      
+      var msg1 = snapshot.child("chat").child("message" + (qtyOfMessages)).child("message").val();
+      var msg1User = snapshot.child("chat").child("message" + (qtyOfMessages)).child("userID").val();
+      var msg1UserName = snapshot.child("results").child("name" + msg1User).child("name").val()
+      if(msg1 && msg1User && msg1UserName){
+            var msg1Element = $("<p>")
+            msg1Element.text(msg1UserName + ": " + msg1);
+            msg1Element.prependTo($("#chatBoxCol"))
+      }
+      
+
+      var msg2 = snapshot.child("chat").child("message" + (qtyOfMessages-1)).child("message").val();
+      var msg2User = snapshot.child("chat").child("message" + (qtyOfMessages-1)).child("userID").val();
+      var msg2UserName = snapshot.child("results").child("name" + msg2User).child("name").val()
+      if(msg2 && msg2User && msg2UserName){
+            var msg2Element = $("<p>")
+            msg2Element.text(msg2UserName + ": " + msg2);
+            msg2Element.prependTo($("#chatBoxCol"))
+      }
+
+      var msg3 = snapshot.child("chat").child("message" + (qtyOfMessages-2)).child("message").val();
+      var msg3User = snapshot.child("chat").child("message" + (qtyOfMessages-2)).child("userID").val();
+      var msg3UserName = snapshot.child("results").child("name" + msg3User).child("name").val()
+      if(msg3 && msg3User && msg3UserName){
+            var msg3Element = $("<p>")
+            msg3Element.text(msg3UserName + ": " + msg3);
+            msg3Element.prependTo($("#chatBoxCol"))
       }
 })
