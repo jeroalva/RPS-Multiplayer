@@ -29,16 +29,24 @@ var firebaseConfig = {
 
     firebase.initializeApp(firebaseConfig);
     var database = firebase.database();
-    database.ref("/results/player1").remove();
-    database.ref("/results/player2").remove();
-    database.ref("/game").remove();
-    database.ref("/restartGame").set(false);
-    database.ref("/chat").remove();
-
 
 //---------------------------------------------------------------------------------------------------------------------
 //                                         FUNCIONES
 //---------------------------------------------------------------------------------------------------------------------
+
+//0. Funcion para reinicializar todos los parametros de la BD cuando se hace reload de la pagina
+function reload(){
+      if(startClicksCounter === null || startClicksCounter<2){
+            console.log("Dentro de reload")
+            database.ref("/results").remove();
+            database.ref("/startClicksCounter").remove();
+            database.ref("/restartGame").remove();
+            database.ref("/game").remove();
+            database.ref("/chat").remove();
+      }
+}
+
+
 
 //1. Funcion para mostrar pantalla de espera con el GIF en caso de que solo haya un usuario dentro
 function showWaitScreen(){
@@ -248,6 +256,7 @@ function createResults(P1Name,P1Wins,P1Draws,P1Losses,P2Name,P2Wins,P2Draws,P2Lo
       resultElement.appendTo($("#overAllScoreCol"))
 }
 
+
 //---------------------------------------------------------------------------------------------------------------------
 //                                         DECLARACION DE VARIABLES
 //---------------------------------------------------------------------------------------------------------------------
@@ -256,7 +265,6 @@ var connectedRef = database.ref(".info/connected");
 var qtyOfUsers = 0;
 var userIDState = false;
 var userID = "";
-var clickedStart = false;
 var playerPlayed = false; //nos dice si el usuario de la DOM ya selecciono opcion
 var playerPick =""; 
 var opponentPick = "";
@@ -268,12 +276,14 @@ var draws = 0;
 var looses = 0;
 var gameEnd = false;
 var messageCounter = 0;
+var localStartClick = false;
+var startClicksCounter;
 
 //---------------------------------------------------------------------------------------------------------------------
 //                                         EVENTOS
 //---------------------------------------------------------------------------------------------------------------------
 
-// 0.Evento para detectar nuevas conecciones en el nodo connections de la BD y en caso de desconexion quitar conexiones
+// 0.Evento para detectar nuevas conexiones en el nodo connections de la BD y en caso de desconexion quitar conexiones
 connectedRef.on("value", function(snap) {
       if (snap.val()) {
             var con = connectionsRef.push(true);
@@ -282,65 +292,64 @@ connectedRef.on("value", function(snap) {
 });
 
 
-//1. Evento que detecta cambios en las conexiones, asigna numero de usuario a cada sesion y en caso de desconexion de un usuario regresa a pantalla de bienvenida 
-connectionsRef.on("value", function(snapshot) {
-      qtyOfUsers = snapshot.numChildren();
+//2.1 Evento para tarer el valor de startClicksCounter de la BD
+database.ref("/results/startClicksCounter").on("value", function(snapshot){
+      startClicksCounter = snapshot.val()
+      if(startClicksCounter===2 && $("#playingScreenContainer").hasClass("d-none")){
+            showPlayScreen();
+      }
+})
+
+//1. Evento que detecta cambios en las conexiones
+database.ref().on("value", function(snapshot) {
+      qtyOfUsersVar = qtyOfUsers - snapshot.child("connections").numChildren();
+      qtyOfUsers = snapshot.child("connections").numChildren();
       if(userIDState===false){
             userID = qtyOfUsers;
             userIDState = true;
-            if(userID===1){
-                        database.ref("/results/startClicks/startClick1/clickedStart").set(false)
-                        database.ref("/results/startClicks/startClick2/clickedStart").set(false)
+      }
+      if(qtyOfUsersVar>0 && (qtyOfUsers<startClicksCounter)){
+            startClicksCounter = qtyOfUsers;
+            database.ref("/results/startClicksCounter").set(startClicksCounter);
+            if(startClicksCounter===qtyOfUsers && startClicksCounter===1){
+                  console.log("Dentro1: " + qtyOfUsers)
+                  showWaitScreen();
             }
-            else if(userID===2){
-                        database.ref("/results/startClicks/startClick2/clickedStart").set(false)
+            else{
+                  console.log("dentro2: startClicksCounter=" + startClicksCounter + ", qtyOfUsers=" + qtyOfUsers)
+                  showWelcScreen();
+                  localStartClick = false;
+                  database.ref("/results/startClicksCounter").set(0);
             }
       }
+});
 
-      if(userID === 1){
-            var thisUserClickedStart = snapshot.child("/results/startClicks/startClick1/clickedStart").val();
-            var otherUserClickedStart = snapshot.child("/results/startClicks/startClick2/clickedStart").val();
-      }
-      else{
-            var thisUserClickedStart = snapshot.child("/results/startClicks/startClick2/clickedStart").val();
-            var otherUserClickedStart = snapshot.child("/results/startClicks/startClick1/clickedStart").val();
-      }
 
-      if(thisUserClickedStart===true && otherUserClickedStart === true && qtyOfUsers===2){
+
+//2.0 Evento para detectar el click en Start, actualizar el startClicksCounter en firebase y actualizar el nombre del usuario en firebase
+$("#startButton").on("click", function(){
+      if($("#userNameInput").val()!="" && (startClicksCounter === 0 || startClicksCounter === null)){
+            console.log("dentro de startClick event pre asignacion a BD, startClicksCounter: " + startClicksCounter);
+            database.ref("/results/name" + (startClicksCounter+1)).set({name : $("#userNameInput").val()})
+            database.ref("/results/startClicksCounter").set(startClicksCounter + 1)
+            localStartClick = true;
+            showWaitScreen();
+      }
+      else if($("#userNameInput").val()!="" && startClicksCounter === 1){
+            database.ref("/results/name" + (startClicksCounter+1)).set({name : $("#userNameInput").val()})
+            database.ref("/results/startClicksCounter").set(startClicksCounter +1)
+            localStartClick = true;
             showPlayScreen();
       }
-      if(!$("#playingScreenContainer").hasClass("d-none") && qtyOfUsers < 2){
-            qtyOfUsers = 0;
-            userIDState = false;
-            userID = "";
-            clickedStart = false;
-            playerPlayed = false; //nos dice si el usuario de la DOM ya selecciono opcion
-            playerPick =""; 
-            opponentPick = "";
-            pickedElement = "";
-            player1PickDB = "";
-            player2PickDB = "";
-            wins = 0;
-            draws = 0;
-            looses = 0;
-            gameEnd = false;
-            showWelcScreen();
-      }
-});
-
-
-//2. Evento para detectar el click en Start y dependiendo de si hay dos usuarios mandar a Waiting Screen o bien ya mandar a la pantalla de juego con el Player 1 o el Player 2 abierto dependiendo de que usuario es el que esta viendo el DOM
-$("#startButton").on("click", function(){
-      if($("#userNameInput").val()!=""){
-            clickedStart = true;
-            database.ref("/results/name" + userID).set({name : $("#userNameInput").val()})
-            database.ref("/results/startClicks/startClick" + userID).set({clickedStart : true})
-      }
-      else{
+      else if($("#userNameInput").val()==="" && startClicksCounter < 2){
             $("#noNameModal").modal("show");
       }
-      
+      else if(startClicksCounter >= 2){
+            $("#tooManyUsers").modal("show");
+      }
 });
+
+
 
 //3. Evento para detectar click en cualquiera de las 3 opciones de juego de los dos usuarios y actualizar la seleccion hacia la BD
 $(".optionButtonP").on("click", function(){
