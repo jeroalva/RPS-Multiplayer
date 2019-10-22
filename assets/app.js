@@ -452,15 +452,16 @@ database.ref("/restartGame").on("value", function(snapshot){
 })
 
 //8. Evento para detectar desde la base de datos si los dos usuarios ya dieron click y mandar a pantalla de juego o a pantalla de espera
-database.ref("/results/startClicks").on("value", function(snapshot){
-      if(userID === 1 && snapshot.child("/startClick1/clickedStart").val() === true && snapshot.child("/startClick2/clickedStart").val() === false){
-            showWaitScreen();
+database.ref().on("value", function(snapshot){
+      if(snapshot.child("connections").numChildren===2){
+            if(userID === 1 && snapshot.child("/results/startClicks/startClick1/clickedStart").val() === true && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === false){
+                  showWaitScreen();
+            }
+            else if(userID === 2 && snapshot.child("/results/startClicks/startClick1/clickedStart").val() === false && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === true){
+                  showWaitScreen();
+            }
+            else if(snapshot.child("/results/startClicks/startClick1/clickedStart").val() === true && snapshot.child("/results/startClicks/startClick2/clickedStart").val() === true){
+                  showPlayScreen();
+            }
       }
-      else if(userID === 2 && snapshot.child("/startClick1/clickedStart").val() === false && snapshot.child("/startClick2/clickedStart").val() === true){
-            showWaitScreen();
-      }
-      else if(snapshot.child("/startClick1/clickedStart").val() === true && snapshot.child("/startClick2/clickedStart").val() === true){
-            showPlayScreen();
-      }
-
 })
